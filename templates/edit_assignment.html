@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Edit Assignment</h2>
+
+<form method="POST">
+
+    Title:<br>
+    <input type="text" name="title" value="{{ assignment.title }}" required><br><br>
+
+    Instructions:<br>
+    <textarea name="instructions">{{ assignment.instructions }}</textarea><br><br>
+
+    Due Date:<br>
+    <input type="date" name="due_date" value="{{ assignment.due_date }}"><br><br>
+
+    <button type="submit">Update</button>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add Assignment</h2>
+
+<form method="POST">
+
+    Course:<br>
+    <select name="course_id" required>
+        {% for course in courses %}
+        <option value="{{ course.course_id }}">
+            {{ course.course_name }}
+        </option>
+        {% endfor %}
+    </select><br><br>
+
+    Title:<br>
+    <input type="text" name="title" required><br><br>
+
+    Instructions:<br>
+    <textarea name="instructions" rows="6" cols="40"
+        placeholder="Enter full assignment instructions here..." required></textarea>
+    <br><br>
+
+    Due Date:<br>
+    <input type="date" name="due_date"><br><br>
+
+    <button type="submit">Add Assignment</button>
+</form>
+
+{% endblock %}

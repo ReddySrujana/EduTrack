@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Grade Submissions (Instructor Only)</h2>
+
+<table border="1">
+    <tr>
+        <th>Student</th>
+        <th>Assignment</th>
+        <th>Answer</th>
+        <th>Date</th>
+        <th>Current Grade</th>
+        <th>Assign Grade</th>
+    </tr>
+
+    {% for s in submissions %}
+    <tr>
+        <td>{{ s.student }}</td>
+        <td>{{ s.title }}</td>
+        <td>{{ s.answer }}</td>
+        <td>{{ s.submission_date }}</td>
+        <td>{{ s.grade }}</td>
+
+        <td>
+            <form method="POST">
+                <input type="hidden" name="submission_id" value="{{ s.submission_id }}">
+                <input type="number" name="grade" min="0" max="100" required>
+                <button type="submit">Save</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

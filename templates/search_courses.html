@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Search Courses</h2>
+
+<form method="POST">
+    <input type="text" name="keyword" placeholder="Search course name" required>
+    <button type="submit">Search</button>
+</form>
+
+{% if results %}
+<table border="1">
+    <tr>
+        <th>Course ID</th>
+        <th>Course Name</th>
+        <th>Instructor</th>
+    </tr>
+
+    {% for course in results %}
+    <tr>
+        <td>{{ course.course_id }}</td>
+        <td>{{ course.course_name }}</td>
+        <td>{{ course.instructor }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}

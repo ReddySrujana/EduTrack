@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Submit Assignment</h2>
+
+<form method="POST">
+
+    Assignment:<br>
+    <select name="assignment_id" required>
+        {% for assignment in assignments %}
+        <option value="{{ assignment.assignment_id }}">
+            {{ assignment.title }}
+        </option>
+        {% endfor %}
+    </select><br><br>
+
+    Student:<br>
+    <select name="student_id" required>
+        {% for student in students %}
+        <option value="{{ student.user_id }}">
+            {{ student.name }}
+        </option>
+        {% endfor %}
+    </select><br><br>
+
+    Submission Date:<br>
+    <input type="date" name="submission_date" required><br><br>
+
+    Answer / Submission:<br>
+    <textarea name="answer" rows="8" cols="50"
+        placeholder="Write your assignment answer here..." required></textarea>
+    <br><br>
+
+    <button type="submit">Submit Assignment</button>
+
+</form>
+
+{% endblock %}
