@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Edit Enrollment</h2>
+
+<form method="POST">
+
+    Student:
+    <select name="student_id">
+        {% for s in students %}
+        <option value="{{ s.user_id }}"
+            {% if s.user_id == current_student %}selected{% endif %}>
+            {{ s.name }}
+        </option>
+        {% endfor %}
+    </select><br>
+
+    Course:
+    <select name="course_id">
+        {% for c in courses %}
+        <option value="{{ c.course_id }}"
+            {% if c.course_id == current_course %}selected{% endif %}>
+            {{ c.course_name }}
+        </option>
+        {% endfor %}
+    </select><br>
+
+    <button type="submit">Update</button>
+</form>
+
+{% endblock %}

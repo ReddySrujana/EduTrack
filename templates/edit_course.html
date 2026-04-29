@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Edit Course</h2>
+
+<form method="POST">
+    Course Name:
+    <input type="text" name="course_name" value="{{ course.course_name }}" required><br>
+
+    Instructor:
+    <select name="instructor_id">
+        {% for instructor in instructors %}
+        <option value="{{ instructor.user_id }}"
+            {% if instructor.user_id == course.instructor_id %}selected{% endif %}>
+            {{ instructor.name }}
+        </option>
+        {% endfor %}
+    </select><br>
+
+    <button type="submit">Update</button>
+</form>
+
+{% endblock %}

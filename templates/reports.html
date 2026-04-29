@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>📊 Database Reports</h2>
+
+<hr>
+
+<h3>🔗 JOIN QUERY: Students & Their Courses</h3>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Student Name</th>
+        <th>Course Name</th>
+    </tr>
+
+    {% for row in student_courses %}
+    <tr>
+        <td>{{ row.student_name }}</td>
+        <td>{{ row.course_name }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br><br>
+
+<h3>📈 AGGREGATE QUERY: Students per Course</h3>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Course Name</th>
+        <th>Total Students</th>
+    </tr>
+
+    {% for row in course_counts %}
+    <tr>
+        <td>{{ row.course_name }}</td>
+        <td>{{ row.total_students }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
