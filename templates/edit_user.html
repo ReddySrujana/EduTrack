@@ -1,28 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Edit Enrollment</h2>
+<h2>Edit User</h2>
 
 <form method="POST">
+    Name: <input type="text" name="name" value="{{ user.name }}" required><br>
+    Email: <input type="email" name="email" value="{{ user.email }}" required><br>
 
-    Student:
-    <select name="student_id">
-        {% for s in students %}
-        <option value="{{ s.user_id }}"
-            {% if s.user_id == current_student %}selected{% endif %}>
-            {{ s.name }}
-        </option>
-        {% endfor %}
-    </select><br>
-
-    Course:
-    <select name="course_id">
-        {% for c in courses %}
-        <option value="{{ c.course_id }}"
-            {% if c.course_id == current_course %}selected{% endif %}>
-            {{ c.course_name }}
-        </option>
-        {% endfor %}
+    Role:
+    <select name="role">
+        <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+        <option value="instructor" {% if user.role == 'instructor' %}selected{% endif %}>Instructor</option>
     </select><br>
 
     <button type="submit">Update</button>
