@@ -309,6 +309,17 @@ def edit_enrollment(student, course):
         new_student = request.form['student_id']
         new_course = request.form['course_id']
 
+        # Prevent duplicate enrollment (same student-course pair already exists)
+        exists = db.execute('''
+            SELECT 1 FROM Enrollments
+            WHERE student_id = ? AND course_id = ?
+        ''', (new_student, new_course)).fetchone()
+
+        # If it exists and it's not the same record being edited, block it
+        if exists and (int(new_student) != student or int(new_course) != course):
+            return "❌ Oops! This student is already enrolled in this course."
+
+        # Safe update
         db.execute('''
             UPDATE Enrollments
             SET student_id = ?, course_id = ?
@@ -318,6 +329,7 @@ def edit_enrollment(student, course):
         db.commit()
         return redirect(url_for('list_enrollments'))
 
+    # GET request (load form data)
     students = db.execute(
         "SELECT * FROM Users WHERE role='student'"
     ).fetchall()
@@ -331,7 +343,6 @@ def edit_enrollment(student, course):
         current_student=student,
         current_course=course
     )
-
 # Delete enrollment
 @app.route('/delete_enrollment/<int:student>/<int:course>')
 def delete_enrollment(student, course):
