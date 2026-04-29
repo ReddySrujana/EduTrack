@@ -117,13 +117,18 @@ def edit_user(user_id):
         email = request.form['email']
         role = request.form['role']
 
-        db.execute('''
-            UPDATE Users
-            SET name = ?, email = ?, role = ?
-            WHERE user_id = ?
-        ''', (name, email, role, user_id))
+        try:
+            db.execute('''
+                UPDATE Users
+                SET name = ?, email = ?, role = ?
+                WHERE user_id = ?
+            ''', (name, email, role, user_id))
 
-        db.commit()
+            db.commit()
+
+        except Exception as e:
+            return f"Update failed: {e}"
+
         return redirect(url_for('list_users'))
 
     user = db.execute(
