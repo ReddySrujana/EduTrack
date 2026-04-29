@@ -107,6 +107,56 @@ def list_users():
     users = db.execute('SELECT * FROM Users').fetchall()
     return render_template('list_users.html', users=users)
 
+# edit user information (name, email, role)
+@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+def edit_user(user_id):
+    db = get_db()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        role = request.form['role']
+
+        db.execute('''
+            UPDATE Users
+            SET name = ?, email = ?, role = ?
+            WHERE user_id = ?
+        ''', (name, email, role, user_id))
+
+        db.commit()
+        return redirect(url_for('list_users'))
+
+    user = db.execute(
+        'SELECT * FROM Users WHERE user_id = ?',
+        (user_id,)
+    ).fetchone()
+
+    return render_template('edit_user.html', user=user)
+
+# delete user
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    db = get_db()
+
+    try:
+        # delete submissions by this user
+        db.execute('DELETE FROM Submissions WHERE student_id = ?', (user_id,))
+
+        # delete enrollments
+        db.execute('DELETE FROM Enrollments WHERE student_id = ?', (user_id,))
+
+        # delete courses they teach
+        db.execute('DELETE FROM Courses WHERE instructor_id = ?', (user_id,))
+
+        # NOW delete the user
+        db.execute('DELETE FROM Users WHERE user_id = ?', (user_id,))
+
+        db.commit()
+
+    except Exception as e:
+        return f"Error: {e}"
+
+    return redirect(url_for('list_users'))
 
 # ---------------- COURSES ---------------- #
 # add course
@@ -143,6 +193,68 @@ def list_courses():
 
     return render_template('list_courses.html', courses=courses)
 
+# edit course information (course name and instructor)
+@app.route('/edit_course/<int:course_id>', methods=['GET', 'POST'])
+def edit_course(course_id):
+    db = get_db()
+
+    if request.method == 'POST':
+        course_name = request.form['course_name']
+        instructor_id = request.form['instructor_id']
+
+        db.execute('''
+            UPDATE Courses
+            SET course_name = ?, instructor_id = ?
+            WHERE course_id = ?
+        ''', (course_name, instructor_id, course_id))
+
+        db.commit()
+        return redirect(url_for('list_courses'))
+
+    course = db.execute(
+        'SELECT * FROM Courses WHERE course_id = ?',
+        (course_id,)
+    ).fetchone()
+
+    instructors = db.execute(
+        "SELECT * FROM Users WHERE role='instructor'"
+    ).fetchall()
+
+    return render_template(
+        'edit_course.html',
+        course=course,
+        instructors=instructors
+    )
+
+# Delete Course
+@app.route('/delete_course/<int:course_id>')
+def delete_course(course_id):
+    db = get_db()
+
+    try:
+        # delete submissions linked to assignments in this course
+        db.execute('''
+            DELETE FROM Submissions
+            WHERE assignment_id IN (
+                SELECT assignment_id FROM Assignments WHERE course_id = ?
+            )
+        ''', (course_id,))
+
+        # delete assignments
+        db.execute('DELETE FROM Assignments WHERE course_id = ?', (course_id,))
+
+        # delete enrollments
+        db.execute('DELETE FROM Enrollments WHERE course_id = ?', (course_id,))
+
+        # delete course
+        db.execute('DELETE FROM Courses WHERE course_id = ?', (course_id,))
+
+        db.commit()
+
+    except Exception as e:
+        return f"Error: {e}"
+
+    return redirect(url_for('list_courses'))
 
 # ---------------- ENROLLMENTS ---------------- #
 
@@ -174,8 +286,13 @@ def enroll():
 @app.route('/enrollments')
 def list_enrollments():
     db = get_db()
+
     enrollments = db.execute('''
-        SELECT u.name AS student, c.course_name
+        SELECT 
+            e.student_id,
+            e.course_id,
+            u.name AS student,
+            c.course_name
         FROM Enrollments e
         JOIN Users u ON e.student_id = u.user_id
         JOIN Courses c ON e.course_id = c.course_id
@@ -183,6 +300,50 @@ def list_enrollments():
 
     return render_template('list_enrollments.html', enrollments=enrollments)
 
+# Update enrollment (change course for a student)
+@app.route('/edit_enrollment/<int:student>/<int:course>', methods=['GET', 'POST'])
+def edit_enrollment(student, course):
+    db = get_db()
+
+    if request.method == 'POST':
+        new_student = request.form['student_id']
+        new_course = request.form['course_id']
+
+        db.execute('''
+            UPDATE Enrollments
+            SET student_id = ?, course_id = ?
+            WHERE student_id = ? AND course_id = ?
+        ''', (new_student, new_course, student, course))
+
+        db.commit()
+        return redirect(url_for('list_enrollments'))
+
+    students = db.execute(
+        "SELECT * FROM Users WHERE role='student'"
+    ).fetchall()
+
+    courses = db.execute("SELECT * FROM Courses").fetchall()
+
+    return render_template(
+        'edit_enrollment.html',
+        students=students,
+        courses=courses,
+        current_student=student,
+        current_course=course
+    )
+
+# Delete enrollment
+@app.route('/delete_enrollment/<int:student>/<int:course>')
+def delete_enrollment(student, course):
+    db = get_db()
+
+    db.execute(
+        'DELETE FROM Enrollments WHERE student_id = ? AND course_id = ?',
+        (student, course)
+    )
+    db.commit()
+
+    return redirect(url_for('list_enrollments'))
 
 # ---------------- ASSIGNMENTS ---------------- #
 
@@ -410,6 +571,37 @@ def search_courses():
         ''', (f'%{keyword}%',)).fetchall()
 
     return render_template('search_courses.html', results=results)
+
+# reports page showing all students enrolled in each course and number of students per course
+@app.route('/reports')
+def reports():
+    db = get_db()
+
+    # JOIN QUERY: students + courses
+    student_courses = db.execute('''
+        SELECT 
+            u.name AS student_name,
+            c.course_name
+        FROM Enrollments e
+        JOIN Users u ON e.student_id = u.user_id
+        JOIN Courses c ON e.course_id = c.course_id
+    ''').fetchall()
+
+    # AGGREGATE QUERY: number of students per course
+    course_counts = db.execute('''
+        SELECT 
+            c.course_name,
+            COUNT(e.student_id) AS total_students
+        FROM Courses c
+        LEFT JOIN Enrollments e ON c.course_id = e.course_id
+        GROUP BY c.course_id, c.course_name
+    ''').fetchall()
+
+    return render_template(
+        'reports.html',
+        student_courses=student_courses,
+        course_counts=course_counts
+    )
 
 # initialize database on first run
 with app.app_context():
